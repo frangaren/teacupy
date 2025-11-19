@@ -1,0 +1,39 @@
+name: Python package
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+
+    permissions:
+      checks: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # You can test your matrix by printing the current Python version
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y pipx
+          pipx ensurepath
+          pipx install poetry
+          poetry install
+      - name: Lint code
+        run: |
+          poetry run ruff check --output-format=github
+      - name: Check code format
+        run: |
+          poetry run ruff format --diff
+      - name: Run tests with coverage
+        run: |
+          poetry run pytest --doctest-modules --junitxml=junit/test-results.xml --cov=src --cov-report=xml --cov-report=html
+            - name: Upload Test Report
